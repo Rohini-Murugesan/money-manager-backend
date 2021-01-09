@@ -2,7 +2,9 @@ const express = require("express")
 const mongodb = require("mongodb");
 const dotenv = require('dotenv').config();
 const app = express()
+const cors = require("cors")
 app.use(express.json())
+app.use(cors())
 const bcrypt = require("bcryptjs");
 const mongoClient = mongodb.MongoClient;
 const port = process.env.PORT || 3000;
