@@ -8,6 +8,8 @@ module.exports = function(app,mongoClient,dburl) {
         Keys = Object.keys(request.body)
         if (requiredKeys.every((key) => Keys.includes(key)) && (Keys.length === requiredKeys.length)) {
             const currentDate = new Date();
+            request.body["Date"] = new Date(request.body.Date);
+            //console.log(request.body.Date);
             request.body["Time"] = currentDate.getTime();
             let Analytics = await db.collection("Analytics").find({"userId":request.body.userId},{projection: {"expense_count":1}}).toArray();
             await db.collection("Analytics").findOneAndUpdate({"userId":request.body.userId},{ $inc: {expense_count : 1}});
@@ -84,6 +86,57 @@ app.get("/expense/allDetails", async (request, response) => {
         response.sendStatus(500);
     }
 });
+
+app.get("/expense/filter/fromDate/:fromDate/toDate/:toDate", async (request, response) => {
+    try {
+        let fromDate = new Date(request.params.fromDate);
+        let toDate = new Date(request.params.toDate)
+        let client = await mongoClient.connect(dburl);
+        let db = client.db("money_manager");
+        let result = await db
+        .collection("expense")
+        .find({userId:request.body.userId,Date:{$gte:fromDate,$lt:toDate}}).toArray();
+        response.status(202).json({"data":result});
+    } catch (err) {
+        console.info("ERROR : ", err);
+        response.sendStatus(500);
+    }
+});
+
+app.get("/expense/filter/category/:category", async (request, response) => {
+    try {
+        let category = request.params.category
+        // console.log(category)
+        let client = await mongoClient.connect(dburl);
+        let db = client.db("money_manager");
+        let result = await db
+        .collection("expense")
+        .find({userId:request.body.userId,expense_category:category}).toArray();
+        response.status(202).json({"data":result});
+    } catch (err) {
+        console.info("ERROR : ", err);
+        response.sendStatus(500);
+    }
+});
+
+
+app.get("/expense/filter/division/:division", async (request, response) => {
+    try {
+        let division = request.params.division
+        // console.log(division)
+        let client = await mongoClient.connect(dburl);
+        let db = client.db("money_manager");
+        let result = await db
+        .collection("expense")
+        .find({userId:request.body.userId,expense_division:division}).toArray();
+        response.status(202).json({"data":result});
+    } catch (err) {
+        console.info("ERROR : ", err);
+        response.sendStatus(500);
+    }
+});
+
+
 
 app.post("/expense/edit", async (request, response) => {
     try {

@@ -3,10 +3,11 @@ app.post("/income/add", async (request, response) => {
     try {
         let client = await mongoClient.connect(dburl);
         let db = client.db("money_manager");
-        requiredKeys = ["income_category", "income_amt","income_description","userId","Date","income_division"];
+        requiredKeys = ["income_category", "income_amt","income_description","userId","Date"];
         Keys = Object.keys(request.body)
         if (requiredKeys.every((key) => Keys.includes(key)) && (Keys.length === requiredKeys.length)) {
             const currentDate = new Date();
+            request.body["Date"] = new Date(request.body.Date);
             request.body["Time"] = currentDate.getTime();
             let Analytics = await db.collection("Analytics").find({"userId":request.body.userId},{projection: {"income_count":1}}).toArray();
             await db.collection("Analytics").findOneAndUpdate({"userId":request.body.userId},{ $inc: {income_count : 1}});
@@ -89,7 +90,7 @@ app.post("/income/edit", async (request, response) => {
     try {
         let client = await mongoClient.connect(dburl);
         let db = client.db("money_manager");
-        requiredKeys = ["income_category", "income_amt","income_description","userId","Date","Income_ID","income_division"];
+        requiredKeys = ["income_category", "income_amt","income_description","userId","Date","Income_ID"];
         Keys = Object.keys(request.body)
         if (requiredKeys.every((key) => Keys.includes(key)) && (Keys.length === requiredKeys.length)) {
             let isPresent = await db
@@ -126,6 +127,22 @@ app.post("/income/edit", async (request, response) => {
             });
         }
         
+    } catch (err) {
+        console.info("ERROR : ", err);
+        response.sendStatus(500);
+    }
+});
+
+app.get("/income/filter/fromDate/:fromDate/toDate/:toDate", async (request, response) => {
+    try {
+        let fromDate = new Date(request.params.fromDate);
+        let toDate = new Date(request.params.toDate)
+        let client = await mongoClient.connect(dburl);
+        let db = client.db("money_manager");
+        let result = await db
+        .collection("income")
+        .find({userId:request.body.userId,Date:{$gte:fromDate,$lt:toDate}}).toArray();
+        response.status(202).json({"data":result});
     } catch (err) {
         console.info("ERROR : ", err);
         response.sendStatus(500);
