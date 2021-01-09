@@ -4,11 +4,11 @@ module.exports = function(app,mongoClient,dburl) {
     try {
         let client = await mongoClient.connect(dburl);
         let db = client.db("money_manager");
-        requiredKeys = ["expense_category", "expense_amt","expense_description","userId"];
+        requiredKeys = ["expense_category", "expense_amt","expense_description","userId","Date","expense_division"];
         Keys = Object.keys(request.body)
         if (requiredKeys.every((key) => Keys.includes(key)) && (Keys.length === requiredKeys.length)) {
             const currentDate = new Date();
-            request.body["Date"] = currentDate.getTime();
+            request.body["Time"] = currentDate.getTime();
             let Analytics = await db.collection("Analytics").find({"userId":request.body.userId},{projection: {"expense_count":1}}).toArray();
             await db.collection("Analytics").findOneAndUpdate({"userId":request.body.userId},{ $inc: {expense_count : 1}});
             console.log(Analytics)
@@ -85,4 +85,49 @@ app.get("/expense/allDetails", async (request, response) => {
     }
 });
 
+app.post("/expense/edit", async (request, response) => {
+    try {
+        let client = await mongoClient.connect(dburl);
+        let db = client.db("money_manager");
+        requiredKeys = ["expense_category", "expense_amt","expense_description","userId","Date","Expense_ID","expense_division"];
+        Keys = Object.keys(request.body)
+        if (requiredKeys.every((key) => Keys.includes(key)) && (Keys.length === requiredKeys.length)) {
+            let isPresent = await db
+            .collection("expense")
+            .findOne({userId :  request.body.userId,
+                Expense_ID: request.body.Expense_ID
+            });
+            if (!isPresent) {
+                response.status(404).json({
+                    msg: "Expense Id is not found for this user"
+                });
+            } else {
+            const currentDate = new Date();
+            let curr_time = currentDate.getTime();
+            if(curr_time - isPresent.Time > 120000 ){
+                response
+                .status(406)
+                .json({
+                    msg: "Edit can be done only within 2mins",
+                    ID: request.body.Expense_ID
+                });
+            }else{
+                response
+                    .status(202)
+                    .json({
+                        msg: "Expense updated successfully",
+                        ID: request.body.Expense_ID
+                    });            let result = await db.collection("expense").findOneAndUpdate({"userId":request.body.userId,Expense_ID: request.body.Expense_ID},{ $set: request.body});;      
+            }
+        }
+        } else {
+            response.status(406).json({
+                msg: "Required details not found"
+            });
+        }
+    } catch (err) {
+        console.info("ERROR : ", err);
+        response.sendStatus(500);
+    }
+});
 }
