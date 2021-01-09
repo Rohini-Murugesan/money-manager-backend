@@ -8,7 +8,7 @@ app.use(cors())
 const bcrypt = require("bcryptjs");
 const mongoClient = mongodb.MongoClient;
 const port = process.env.PORT || 3000;
-const dburl =  "mongodb://127.0.0.1:27017/" || process.env.DB_URL   ; // local db url
+const dburl =   process.env.DB_URL || "mongodb://127.0.0.1:27017/" ; // local db url
 
 require('./expense')(app,mongoClient,dburl);
 require('./income')(app,mongoClient,dburl);
