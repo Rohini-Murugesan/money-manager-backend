@@ -72,13 +72,13 @@ app.post("/income/deleteAll", async (request, response) => {
     }
 });
 
-app.get("/income/allDetails", async (request, response) => {
+app.get("/income/allDetails/:userId", async (request, response) => {
     try {
         let client = await mongoClient.connect(dburl);
         let db = client.db("money_manager");
         let result = await db
         .collection("income")
-        .find({userId:request.body.userId}).toArray();
+        .find({userId:request.params.userId}).toArray();
         response.status(202).json({"data":result});
     } catch (err) {
         console.info("ERROR : ", err);
