@@ -78,7 +78,7 @@ app.get("/income/allDetails/:userId", async (request, response) => {
         let db = client.db("money_manager");
         let result = await db
         .collection("income")
-        .find({userId:request.params.userId}).toArray();
+        .find({userId:+request.params.userId}).toArray();
         response.status(202).json({"data":result});
     } catch (err) {
         console.info("ERROR : ", err);
